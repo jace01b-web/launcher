@@ -1,0 +1,29 @@
+# Base44 sandbox dev environment.
+#
+# The app is a single static index.html, so this stack is deliberately thin:
+# one Node service serving the repo from a bind mount (with live reload), so
+# edits show up in the preview without rebuilding anything.
+#
+# Run with:  docker compose -f docker-compose.base44.yml up -d
+
+services:
+  web:
+    image: node:22
+    working_dir: /app
+    volumes:
+      - ./:/app
+    command: ["node", "dev-server.mjs"]
+    environment:
+      - PORT=3000
+      - HOST=0.0.0.0
+      - BASE44_PREVIEW_MODE
+    ports:
+      - "3000:3000"
+    restart: on-failure
+    healthcheck:
+      test:
+        ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
